@@ -49,9 +49,9 @@ CREATE TABLE Obra (
     resumo TEXT(1000) NOT NULL,
     palavras_chave VARCHAR(255) NOT NULL,
     arquivo BLOB NOT NULL,
-    fk_id_curso INT,
-    fk_id_orientador INT,
-    fk_id_autor INT,
+    fk_id_curso INT NOT NULL,
+    fk_id_orientador INT NOT NULL,
+    fk_id_autor INT NOT NULL,
     FOREIGN KEY (fk_id_curso) REFERENCES Curso(id_curso),
     FOREIGN KEY (fk_id_orientador) REFERENCES Orientador(id_orientador),
     FOREIGN KEY (fk_id_autor) REFERENCES Autor(id_autor)
@@ -69,8 +69,8 @@ CREATE TABLE ObraCoorientador (
 -- Criação da tabela LogAcoes
 CREATE TABLE LogAcoes (
     id_log_acoes INT AUTO_INCREMENT PRIMARY KEY,
-    fk_id_administrador INT,
-    fk_id_obra INT,
+    fk_id_administrador INT NOT NULL,
+    fk_id_obra INT NOT NULL,
     acao VARCHAR(45) NOT NULL,
     data_registro DATETIME NOT NULL,
     descricao TEXT(1000) NOT NULL,
