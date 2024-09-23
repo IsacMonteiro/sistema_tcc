@@ -1,4 +1,4 @@
-const { criarAutor, deletarAutor, atualizarAutor } = require('./autor');
+const { criarAutor, deletarAutor, atualizarAutor } = require('./controllers/autor');
 
 // Criar um autor
 criarAutor('20221001', 'João Silva', 'joao.silva@example.com')
