@@ -2,13 +2,14 @@
 const pool = require('../config/connection_db');
 
 
-// Função para criar um autor
-function criarAutor(matricula, nome, email) {
+// Função para criar um curso
+function criarCurso(nome_curso) {
   // Retorna uma Promise para lidar com a operação assíncrona
   return new Promise((resolve, reject) => {
-    const sql = 'INSERT INTO Autor (matricula_autor, nome_autor, email_autor) VALUES (?, ?, ?)';
-    // Executa o SQL, substituindo os '?' pelos valores fornecidos
-    pool.execute(sql, [matricula, nome, email], (err, result) => {
+    // SQL para inserir um novo curso
+    const sql = 'INSERT INTO Curso (nome_curso) VALUES (?)';
+    // Executa o SQL, substituindo o '?' pelo valor fornecido
+    pool.execute(sql, [nome_curso], (err, result) => {
       if (err) return reject(err); // Se ocorrer um erro, a Promise é rejeitada
       resolve(result); // Se a operação for bem-sucedida, a Promise é resolvida com o resultado da execução
     });
@@ -16,13 +17,13 @@ function criarAutor(matricula, nome, email) {
 }
 
 
-// Função para deletar um autor
-function deletarAutor(id_autor) {
+// Função para deletar um curso
+function deletarCurso(id_curso) {
   // Retorna uma Promise para operação assíncrona
   return new Promise((resolve, reject) => {
-    // SQL para deletar o autor com base no id fornecido
-    const sql = 'DELETE FROM Autor WHERE id_autor = ?'; 
-    pool.execute(sql, [id_autor], (err, result) => {
+    // SQL para deletar o curso com base no id fornecido
+    const sql = 'DELETE FROM Curso WHERE id_curso = ?';
+    pool.execute(sql, [id_curso], (err, result) => {
       if (err) return reject(err); // Rejeita a Promise se ocorrer um erro
       resolve(result); // Resolve a Promise com o resultado da exclusão
     });
@@ -30,13 +31,13 @@ function deletarAutor(id_autor) {
 }
 
 
-// Função para atualizar um autor
-function atualizarAutor(id_autor, matricula, nome, email) {
+// Função para atualizar um curso
+function atualizarCurso(id_curso, nome_curso) {
   // Retorna uma Promise para operação assíncrona
   return new Promise((resolve, reject) => {
-    // SQL para atualizar os dados do autor
-    const sql = 'UPDATE Autor SET matricula_autor = ?, nome_autor = ?, email_autor = ? WHERE id_autor = ?';
-    pool.execute(sql, [matricula, nome, email, id_autor], (err, result) => {
+    // SQL para atualizar o nome do curso
+    const sql = 'UPDATE Curso SET nome_curso = ? WHERE id_curso = ?';
+    pool.execute(sql, [nome_curso, id_curso], (err, result) => {
       if (err) return reject(err); // Rejeita a Promise se ocorrer um erro
       resolve(result); // Resolve a Promise com o resultado da atualização
     });
@@ -44,10 +45,12 @@ function atualizarAutor(id_autor, matricula, nome, email) {
 }
 
 
-// Função para listar todos os autores
-function listarAutores() {
+// Função para listar todos os cursos
+function listarCursos() {
+  // Retorna uma Promise para lidar com a operação assíncrona
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM Autor'; // Seleciona todos os autores da tabela
+    // SQL para selecionar todos os cursos
+    const sql = 'SELECT * FROM Curso';
     pool.execute(sql, (err, results) => {
       if (err) return reject(err); // Rejeita a Promise em caso de erro
       resolve(results); // Resolve a Promise com os resultados da consulta
@@ -57,4 +60,4 @@ function listarAutores() {
 
 
 // Exporta as funções para que possam ser utilizadas em outros módulos
-module.exports = { criarAutor, deletarAutor, atualizarAutor, listarAutores };
+module.exports = { criarCurso, deletarCurso, atualizarCurso, listarCursos };

@@ -2,13 +2,13 @@
 const pool = require('../config/connection_db');
 
 
-// Função para criar um autor
-function criarAutor(matricula, nome, email) {
+// Função para criar um orientador
+function criarOrientador(matricula, nome, titulacao, areaAtuacao, email) {
   // Retorna uma Promise para lidar com a operação assíncrona
   return new Promise((resolve, reject) => {
-    const sql = 'INSERT INTO Autor (matricula_autor, nome_autor, email_autor) VALUES (?, ?, ?)';
+    const sql = 'INSERT INTO Orientador (matricula_orientador, nome_orientador, titulacao, area_atuacao, email_orientador) VALUES (?, ?, ?, ?, ?)';
     // Executa o SQL, substituindo os '?' pelos valores fornecidos
-    pool.execute(sql, [matricula, nome, email], (err, result) => {
+    pool.execute(sql, [matricula, nome, titulacao, areaAtuacao, email], (err, result) => {
       if (err) return reject(err); // Se ocorrer um erro, a Promise é rejeitada
       resolve(result); // Se a operação for bem-sucedida, a Promise é resolvida com o resultado da execução
     });
@@ -16,13 +16,13 @@ function criarAutor(matricula, nome, email) {
 }
 
 
-// Função para deletar um autor
-function deletarAutor(id_autor) {
+// Função para deletar um orientador
+function deletarOrientador(id_orientador) {
   // Retorna uma Promise para operação assíncrona
   return new Promise((resolve, reject) => {
-    // SQL para deletar o autor com base no id fornecido
-    const sql = 'DELETE FROM Autor WHERE id_autor = ?'; 
-    pool.execute(sql, [id_autor], (err, result) => {
+    // SQL para deletar o orientador com base no id fornecido
+    const sql = 'DELETE FROM Orientador WHERE id_orientador = ?';
+    pool.execute(sql, [id_orientador], (err, result) => {
       if (err) return reject(err); // Rejeita a Promise se ocorrer um erro
       resolve(result); // Resolve a Promise com o resultado da exclusão
     });
@@ -30,13 +30,13 @@ function deletarAutor(id_autor) {
 }
 
 
-// Função para atualizar um autor
-function atualizarAutor(id_autor, matricula, nome, email) {
+// Função para atualizar um orientador
+function atualizarOrientador(id_orientador, matricula, nome, titulacao, areaAtuacao, email) {
   // Retorna uma Promise para operação assíncrona
   return new Promise((resolve, reject) => {
-    // SQL para atualizar os dados do autor
-    const sql = 'UPDATE Autor SET matricula_autor = ?, nome_autor = ?, email_autor = ? WHERE id_autor = ?';
-    pool.execute(sql, [matricula, nome, email, id_autor], (err, result) => {
+    // SQL para atualizar os dados do orientador
+    const sql = 'UPDATE Orientador SET matricula_orientador = ?, nome_orientador = ?, titulacao = ?, area_atuacao = ?, email_orientador = ? WHERE id_orientador = ?';
+    pool.execute(sql, [matricula, nome, titulacao, areaAtuacao, email, id_orientador], (err, result) => {
       if (err) return reject(err); // Rejeita a Promise se ocorrer um erro
       resolve(result); // Resolve a Promise com o resultado da atualização
     });
@@ -44,10 +44,10 @@ function atualizarAutor(id_autor, matricula, nome, email) {
 }
 
 
-// Função para listar todos os autores
-function listarAutores() {
+// Função para listar todos os orientadores
+function listarOrientadores() {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM Autor'; // Seleciona todos os autores da tabela
+    const sql = 'SELECT * FROM Orientador'; // Seleciona todos os orientadores da tabela
     pool.execute(sql, (err, results) => {
       if (err) return reject(err); // Rejeita a Promise em caso de erro
       resolve(results); // Resolve a Promise com os resultados da consulta
@@ -57,4 +57,4 @@ function listarAutores() {
 
 
 // Exporta as funções para que possam ser utilizadas em outros módulos
-module.exports = { criarAutor, deletarAutor, atualizarAutor, listarAutores };
+module.exports = { criarOrientador, deletarOrientador, atualizarOrientador, listarOrientadores };
