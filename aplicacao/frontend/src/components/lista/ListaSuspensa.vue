@@ -56,7 +56,7 @@
         dropdownOptions: [
           ["Autor 1", "Autor 2", "Autor 3"],
           ["Assunto 1", "Assunto 2", "Assunto 3"],
-          ["Curso 1", "Curso 2", "Curso 3"],
+          ["ADMINISTRAÇÃO", "CIÊNCIAS AMBIENTAIS","DESIGNER DE MODA","GESTÃO EM TECNOLOGIA DA INFORMAÇÃO"],
           ["2020", "2021", "2022"],
           ["Orientador 1", "Orientador 2", "Orientador 3"],
           ["TCC"],
