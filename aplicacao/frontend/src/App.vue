@@ -1,19 +1,11 @@
 <template>
-  <div id="app">
-    <FormularioCadastro/>
-  </div>
-</template>
-
-<script>
-import FormularioCadastro from './components/CadastroForm.vue';
-
-export default {
-  components: {
-    FormularioCadastro
+    <v-app>
+      <router-view />
+    </v-app>
+  </template>
+  
+  <script>
+  export default {
+    name: 'App'
   }
-};
-</script>
-
-<style>
-/* Estilos globais aqui */
-</style>
+  </script>  
