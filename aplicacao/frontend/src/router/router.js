@@ -3,6 +3,7 @@ import HomePage from '@/views/HomePage.vue';
 import SearchPage from '@/views/SearchPage.vue';
 import TccPage from '@/views/TccPage.vue';
 import HomePageAdm from '@/views/HomePageAdm.vue';
+import CadastroFormPage from '@/views/CadastroFormPage.vue';
 
 const routes = [
   {
@@ -21,10 +22,15 @@ const routes = [
     component: TccPage
   },
   {
-    path: '/Adm',
+    path: '/HomePageAdm',
     name: 'HomePageAdm',
     component: HomePageAdm
   },
+  {
+    path: '/CadastroFormPage',
+    name: 'CadastroFormPage',
+    component: CadastroFormPage
+  }
 ];
 
 const router = createRouter({

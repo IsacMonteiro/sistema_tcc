@@ -99,7 +99,7 @@ export default {
   computed: {
     // Computa se o botão "Voltar" deve aparecer
     showBackButton() {
-      return this.$route.path !== '/'; // Esconde o botão na rota Home ('/')
+      return this.$route.path !== '/' && this.$route.path !== '/Adm'; // Esconde o botão nas rotas '/' e '/Adm'
     },
   },
   methods: {

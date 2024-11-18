@@ -3,48 +3,75 @@
       <!-- Logo e Título -->
       <v-container class="d-flex justify-space-between align-center">
         <div class="d-flex align-center">
+          <!-- Logotipo -->
           <router-link to="/" class="d-flex align-center">
             <v-img class="logo-img mr-3" src="/img/logo.png" alt="logo"></v-img>
           </router-link>
+          <!-- Título Principal -->
           <router-link to="/" class="title-link">
             <v-title depressed class="title">REPOSITÓRIO ACADÊMICO IF SUDESTE DE MINAS GERAIS - MURIAÉ</v-title>
           </router-link>
         </div>
   
+        <!-- Título da Área Administrativa (Centralizado) -->
+        <div class="title-adm-container">
+          <v-title class="title-adm">ÁREA ADMINISTRATIVA</v-title>
+        </div>
+  
+        <!-- Saudação, Logout e Logs -->
         <div class="d-flex align-center">
-          <!-- Barra de pesquisa -->
-          <v-text-field
-            solo
-            flat
-            hide-details
-            label="PESQUISA RÁPIDA"
-            class="search-input"
-          ></v-text-field>
-          <!-- Botão de busca com ícone de lupa -->
+          <!-- Saudação -->
+          <span class="welcome-text">
+            <v-icon left>mdi-account-circle</v-icon>
+            Bem-vindo(a), Nome do usuário logado
+          </span>
+          <!-- Botão de Logs -->
           <v-btn
-            icon
-            class="search-btn"
-            @click="handleSearch"
+            outlined
+            class="logs-btn"
+            @click="handleGenerateLogs"
           >
-            <v-icon>mdi-magnify</v-icon>
+            <v-icon left>mdi-file-document-outline</v-icon>
+            Gerar Logs
           </v-btn>
-          <!-- Divisor -->
-          <v-divider vertical class="mx-4 divider-custom"></v-divider>
+          <!-- Botão de Logout -->
+          <v-btn text class="logout-btn" @click="handleLogout">
+            <v-icon left color="red">mdi-logout</v-icon>
+            Sair
+          </v-btn>
         </div>
       </v-container>
     </v-app-bar>
   </template>
   
   <script>
+  export default {
+    methods: {
+      handleLogout() {
+        console.log("Usuário deslogado");
+      },
+      handleGenerateLogs() {
+        console.log("Gerar Logs clicado");
+      },
+    },
+  };
   </script>
   
   <style scoped>
+  /* Estilo do App Bar */
   .v-app-bar {
-    background: #005f00;
+    background-color: #005f00;
     padding: 10px 0;
     border-bottom: 10px solid #00420c;
   }
   
+  /* Estilo do logotipo */
+  .logo-img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  /* Estilo do título principal */
   .title {
     background-color: #00420c;
     padding: 15px;
@@ -53,47 +80,50 @@
     color: #fff;
   }
   
-  .title-link {
-    text-decoration: none; /* Remove o sublinhado */
+  /* Centraliza o título "ÁREA ADMINISTRATIVA" */
+  .title-adm-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1; /* Faz o contêiner crescer e se ajustar ao espaço */
   }
   
-  .logo-img {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .search-input {
-    max-width: 300px;
-    width: 300px;
-    border-radius: 10px;
+  .title-adm {
+    font-size: 28px;
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bold;
     padding: 5px 10px;
-    color: #fff;
+    border-radius: 10px;
   }
   
-  .search-btn {
-    background-color: #00420c;
-    color: #fff;
-    border-radius: 10%;
-    width: 50px;
-    height: 50px;
+  /* Link do título */
+  .title-link {
+    text-decoration: none;
     display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   }
   
-  .search-btn:hover {
-    background-color: #001a05;
+  /* Saudação */
+  .welcome-text {
+    color: #fff;
+    font-size: 1rem;
+    margin-right: 15px;
   }
   
-  .v-divider {
-    border-right: 3px solid #fff !important; /* Controla a espessura do divisor com border */
+  /* Botão de logs */
+  .logs-btn {
+    color: #fff;
+    background-color: #00420c;
+    margin-right: 15px;
+  }
+  .logs-btn:hover {
+    background-color:#001a05;
   }
   
-  .divider-custom {
-    background-color: #fff;
-    margin-top: 10px;
-    margin-bottom: 10px;
+  /* Botão de logout */
+  .logout-btn {
+    color: #f44336;
+    font-size: 1rem;
   }
-
-  </style>
+  </style>  
