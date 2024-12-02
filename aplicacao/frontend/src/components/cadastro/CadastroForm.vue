@@ -25,7 +25,7 @@
           <!-- Tipo -->
           <v-select
             label="Tipo de Obra"
-            v-model="obra.tipo"
+            v-model="obra.tipos"
             :items="tipos"
             item-text="nome"
             item-value="id"
@@ -39,16 +39,17 @@
             v-model="menu"
             :close-on-content-click="false"
             :nudge-width="200"
-            offset-y>
+            offset-y
+            persistent
+          >
             <template v-slot:activator="{ on, attrs }">
               <v-text-field
+                v-bind="attrs"
+                v-on="on"
                 label="Data de Apresentação"
                 v-model="obra.data_apresentacao"
                 :rules="[rules.required]"
                 readonly
-                placeholder="Escolha uma data"
-                v-bind="attrs"
-                v-on="on"
                 outlined
                 dense
               ></v-text-field>
@@ -147,13 +148,16 @@
             outlined
             dense
           ></v-text-field>
-          <v-text-field
+          <v-select
             label="Titulação"
-            v-model="obra.orientador.titulacao"
+            v-model="obra.orientador.titulacoes"
+            :items="titulacoes"
+            item-text="nome"
+            item-value="id"
             :rules="[rules.required]"
             outlined
             dense
-          ></v-text-field>
+          ></v-select>
           <v-text-field
             label="Área de Atuação"
             v-model="obra.orientador.areaAtuacao"
@@ -191,12 +195,16 @@
               outlined
               dense
             ></v-text-field>
-            <v-text-field
+            <v-select
               label="Titulação"
-              v-model="obra.coorientador.titulacao"
+              v-model="obra.coorientador.titulacoes"
+              :items="titulacoes"
+              item-text="nome"
+              item-value="id"
+              :rules="[rules.required]"
               outlined
               dense
-            ></v-text-field>
+            ></v-select>
             <v-text-field
               label="Área de Atuação"
               v-model="obra.coorientador.areaAtuacao"
@@ -233,7 +241,7 @@ export default {
   data() {
     return {
       valid: false,
-      menu: false,
+      menu: false, // Variável para controle do menu
       obra: {
         titulo: "",
         tipo: "",
@@ -249,6 +257,7 @@ export default {
       },
       cursos: [], // Lista de cursos
       tipos: [], // Lista de tipos de obra
+      titulacoes: [], // Lista de titulações
       rules: {
         required: (value) => !!value || "Este campo é obrigatório",
         email: (value) =>
@@ -266,10 +275,9 @@ export default {
       if (this.$refs.obraForm.validate()) {
         try {
           await this.cadastrarObra(this.obra);
-          this.$toast.success("Obra cadastrada com sucesso!");
-          this.handleReset(); // Limpa o formulário após o cadastro
+          this.$router.push("/HomePageAdm");
         } catch (error) {
-          this.$toast.error("Erro ao cadastrar a obra!");
+          console.error(error);
         }
       }
     },
@@ -342,7 +350,7 @@ export default {
   color: #002907;
 }
 
-h4{
+h4 {
   margin-bottom: 10px;
   padding: 5px;
   text-transform: uppercase;
