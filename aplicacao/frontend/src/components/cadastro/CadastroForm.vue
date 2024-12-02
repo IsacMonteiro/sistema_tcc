@@ -35,31 +35,14 @@
           ></v-select>
 
           <!-- Data de Apresentação -->
-          <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            :nudge-width="200"
-            offset-y
-            persistent
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-text-field
-                v-bind="attrs"
-                v-on="on"
-                label="Data de Apresentação"
-                v-model="obra.data_apresentacao"
-                :rules="[rules.required]"
-                readonly
-                outlined
-                dense
-              ></v-text-field>
-            </template>
-            <v-date-picker
-              v-model="obra.data_apresentacao"
-              @input="menu = false"
-              scrollable
-            ></v-date-picker>
-          </v-menu>
+          <v-text-field
+            label="Data de Apresentação"
+            v-model="obra.data_apresentacao"
+            v-mask="'##/##/####'"
+            :rules="[rules.required, rules.date]"
+            outlined
+            dense
+          ></v-text-field>
 
           <!-- Resumo -->
           <v-textarea
@@ -85,6 +68,7 @@
           <v-file-input
             label="Arquivo"
             v-model="obra.arquivo"
+            :rules="[rules.requiredFile, rules.validFileType, rules.maxFileSize]"
             outlined
             dense
             accept=".pdf"
@@ -113,7 +97,8 @@
           <v-text-field
             label="Matrícula"
             v-model="obra.autor.matricula"
-            :rules="[rules.required]"
+            :rules="[rules.required, rules.matriculaLength]"
+            v-mask="'##########'"
             outlined
             dense
           ></v-text-field>
@@ -127,7 +112,7 @@
           <v-text-field
             label="Email"
             v-model="obra.autor.email"
-            :rules="[rules.email]"
+            :rules="[rules.required, rules.email]"
             outlined
             dense
           ></v-text-field>
@@ -137,7 +122,8 @@
           <v-text-field
             label="Matrícula"
             v-model="obra.orientador.matricula"
-            :rules="[rules.required]"
+            :rules="[rules.required, rules.matriculaLength]"
+            v-mask="'##########'"
             outlined
             dense
           ></v-text-field>
@@ -161,13 +147,14 @@
           <v-text-field
             label="Área de Atuação"
             v-model="obra.orientador.areaAtuacao"
+            :rules="[rules.required]"
             outlined
             dense
           ></v-text-field>
           <v-text-field
             label="Email"
             v-model="obra.orientador.email"
-            :rules="[rules.email]"
+            :rules="[rules.required, rules.email]"
             outlined
             dense
           ></v-text-field>
@@ -186,35 +173,39 @@
             <v-text-field
               label="Matrícula"
               v-model="obra.coorientador.matricula"
+              :rules="[rules.required, rules.matriculaLength]"
+              v-mask="'##########'"
               outlined
               dense
             ></v-text-field>
             <v-text-field
               label="Nome"
               v-model="obra.coorientador.nome"
+              :rules="coorientadorRules"
               outlined
               dense
             ></v-text-field>
             <v-select
               label="Titulação"
               v-model="obra.coorientador.titulacoes"
+              :rules="coorientadorRules"
               :items="titulacoes"
               item-text="nome"
               item-value="id"
-              :rules="[rules.required]"
               outlined
               dense
             ></v-select>
             <v-text-field
               label="Área de Atuação"
               v-model="obra.coorientador.areaAtuacao"
+              :rules="coorientadorRules"
               outlined
               dense
             ></v-text-field>
             <v-text-field
               label="Email"
               v-model="obra.coorientador.email"
-              :rules="[rules.email]"
+              :rules="[rules.required ,rules.email]"
               outlined
               dense
             ></v-text-field>
@@ -235,66 +226,62 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+  import { mapActions } from "vuex";
+  import { rules } from "@/helpers/formValidations";
+  import { initialObra } from "@/helpers/obraData";
+  import { handleReset, handleFormSubmit } from "@/helpers/formMethods";
+  import { mask } from "vue-the-mask"; // Importa a diretiva de máscara
 
-export default {
-  data() {
-    return {
-      valid: false,
-      menu: false, // Variável para controle do menu
-      obra: {
-        titulo: "",
-        tipo: "",
-        data_apresentacao: null,
-        resumo: "",
-        palavras_chave: "",
-        arquivo: null,
-        fk_id_curso: null,
-        autor: { matricula: "", nome: "", email: "" },
-        orientador: { matricula: "", nome: "", titulacao: "", areaAtuacao: "", email: "" },
-        coorientador: { matricula: "", nome: "", titulacao: "", areaAtuacao: "", email: "" },
-        possuiCoorientador: false,
-      },
-      cursos: [], // Lista de cursos
-      tipos: [], // Lista de tipos de obra
-      titulacoes: [], // Lista de titulações
-      rules: {
-        required: (value) => !!value || "Este campo é obrigatório",
-        email: (value) =>
-          !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || "Email inválido",
-        keywords: (value) =>
-          (value && value.split(",").length > 0) ||
-          "Informe ao menos uma palavra-chave",
-      },
-    };
-  },
-  methods: {
-    ...mapActions("obras", ["cadastrarObra"]),
+  export default {
+    directives: { mask }, // Adiciona a diretiva de máscara ao componente
 
-    async handleSubmit() {
-      if (this.$refs.obraForm.validate()) {
-        try {
-          await this.cadastrarObra(this.obra);
-          this.$router.push("/HomePageAdm");
-        } catch (error) {
-          console.error(error);
+    data() {
+      return {
+        valid: false,
+        menu: false,
+        obra: { ...initialObra },
+        cursos: ["ADMINISTRAÇÃO", "CIÊNCIAS AMBIENTAIS", "DESIGNER DE MODA", "GESTÃO EM TECNOLOGIA DA INFORMAÇÃO"],
+        tipos: ["TCC"],
+        titulacoes: [
+          "Bacharel",
+          "Tecnólogo",
+          "Especialista",
+          "Mestre",
+          "Doutor",
+        ],
+        rules, // Regras de validação importadas
+      };
+    },
+
+    // Regras condicionais para coorientador
+    computed: {
+      coorientadorRules() {
+        return this.obra.possuiCoorientador ? [this.rules.required] : [];
+      },
+    },
+
+    methods: {
+      ...mapActions("obras", ["cadastrarObra"]),
+
+      async handleSubmit() {
+        const isValid = await this.$refs.obraForm.validate();
+
+        if (isValid) {
+          await handleFormSubmit(this.$refs.obraForm, this.obra, this.cadastrarObra, this.$router);
+        } else {
+          this.$toast.error("Preencha todos os campos obrigatórios!");
         }
-      }
-    },
+      },
 
-    handleReset() {
-      this.$refs.obraForm.reset();
-      Object.keys(this.obra).forEach((key) => (this.obra[key] = null));
-      this.obra.orientador = { matricula: "", nome: "", titulacao: "", areaAtuacao: "", email: "" };
-      this.obra.coorientador = { matricula: "", nome: "", titulacao: "", areaAtuacao: "", email: "" };
-      this.obra.possuiCoorientador = false;
-    },
+      handleReset() {
+        handleReset(this.$refs.obraForm, this.obra);
+      },
 
-    goBack() {
-      this.$router.push("/HomePageAdm");
+      goBack() {
+        this.$router.push("/HomePageAdm");
+      },
     },
-  },
-};
+  };
 </script>
 
 <style scoped>
