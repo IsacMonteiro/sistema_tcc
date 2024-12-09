@@ -14,7 +14,6 @@
           class="filter-button"
           elevation="2"
           dark
-          
           @click="toggleDropdown(index)"
         >
           <!-- Ícone à Esquerda -->
@@ -27,48 +26,24 @@
         <!-- Lista Suspensa -->
         <v-expand-transition>
           <div v-if="dropdowns[index]" class="dropdown-list">
-            <ul v-if="index === 0">
-              <li v-for="(autor, idx) in getVisibleItems(index)" :key="idx">
-                {{ formatName(autor) }}
-              </li>
-            </ul>
-
-            <ul v-if="index === 1">
-              <li v-for="(obra, idx) in getVisibleItems(index)" :key="idx">
-                {{ obra }}
-              </li>
-            </ul>
-
-            <ul v-if="index === 2">
-              <li v-for="(curso, idx) in getVisibleItems(index)" :key="idx">
-                {{ curso }}
-              </li>
-            </ul>
-
-            <ul v-if="index === 3">
-              <li v-for="(ano, idx) in getVisibleItems(index)" :key="idx">
-                {{ ano }}
-              </li>
-            </ul>
-
-            <ul v-if="index === 4">
-              <li v-for="(orientador, idx) in getVisibleItems(index)" :key="idx">
-                {{ formatName(orientador) }}
-              </li>
-            </ul>
-
-            <ul v-if="index === 5">
-              <li v-for="(tipo, idx) in getVisibleItems(index)" :key="idx">
-                {{ tipo }}
+            <ul>
+              <li
+                v-for="(option, idx) in getVisibleItems(index)"
+                :key="idx"
+                @click="goToResults(index, option.text)"
+                class="dropdown-item"
+              >
+                {{ option.text }} 
+                <span class="item-count">{{ option.count }}</span>
               </li>
             </ul>
 
             <!-- Botões para navegar entre as páginas -->
-            <div v-if="dropdowns[index]" class="pagination-buttons">
+            <div class="pagination-buttons">
               <v-btn
                 v-if="hasPreviousPage(index)"
                 @click="goToPreviousPage(index)"
-                class="pagination-button"
+                class="pagination-button prev-button"
               >
                 Voltar
               </v-btn>
@@ -76,7 +51,7 @@
               <v-btn
                 v-if="hasNextPage(index)"
                 @click="goToNextPage(index)"
-                class="pagination-button"
+                class="pagination-button next-button"
               >
                 Próximo
               </v-btn>
@@ -90,23 +65,25 @@
 
 <script>
 import { useAutorStore } from "../../store/autorStore";
-import { useOrientadorStore } from "../../store/orientadorStore"; 
-import { useObraStore } from "../../store/obraStore"; 
-import { useCursoStore } from "../../store/cursoStore"; 
+import { useOrientadorStore } from "../../store/orientadorStore";
+import { useObraStore } from "../../store/obraStore";
+import { useCursoStore } from "../../store/cursoStore";
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 export default {
   setup() {
+    const router = useRouter();
     const autorStore = useAutorStore();
     const orientadorStore = useOrientadorStore();
     const obraStore = useObraStore();
     const cursoStore = useCursoStore();
+
     const autores = ref([]);
     const orientadores = ref([]);
-    const tiposDeObra = ref([]);
     const cursos = ref([]);
     const obras = ref([]);
-    
+
     const dropdownOptions = ref([
       [], // Autor
       [], // Título
@@ -127,63 +104,110 @@ export default {
 
     const dropdowns = ref([false, false, false, false, false, false]);
     const pages = ref([0, 0, 0, 0, 0, 0]); // Página atual para cada dropdown
-
-    const itemsPerPage = 7; // Número de itens por página
+    const itemsPerPage = 7;
 
     const toggleDropdown = (index) => {
       dropdowns.value[index] = !dropdowns.value[index];
     };
 
-    // Função para formatar o nome conforme o desejado
-    const formatName = (fullName) => {
-      const nameParts = fullName.split(" ");
-      const lastName = nameParts.pop();
-      const firstName = nameParts.join(" ");
-      return `${lastName}, ${firstName}`;
+    const groupAndCountByCustomRelation = (mapFn, items) => {
+      const grouped = items.reduce((acc, item) => {
+        const key = mapFn(item);
+        if (!key) return acc;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+
+      return Object.entries(grouped).map(([text, count]) => ({ text, count }));
     };
 
-    // Função para ordenar os itens
-    const limitAndSort = (array) => {
-      return array.sort((a, b) => a.localeCompare(b));
-    };
-
-    // Atualiza os dropdowns após carregar os dados
     const updateDropdowns = () => {
-      dropdownOptions.value[0] = limitAndSort(autores.value.map((a) => a.nome_autor));
-      dropdownOptions.value[1] = limitAndSort(obras.value.map((o) => o.titulo));
-      dropdownOptions.value[2] = limitAndSort(cursos.value.map((c) => c.nome_curso));
-      dropdownOptions.value[3] = limitAndSort(
-        obras.value.map((o) => new Date(o.data_apresentacao).getFullYear())
+      // Autores
+      dropdownOptions.value[0] = groupAndCountByCustomRelation(
+        (obra) => {
+          const autor = autores.value.find(
+            (a) => a.id_autor === obra.fk_id_autor
+          );
+          return autor ? autor.nome_autor : "Autor Desconhecido";
+        },
+        obras.value
       );
-      dropdownOptions.value[4] = limitAndSort(orientadores.value.map((o) => o.nome_orientador));
-      dropdownOptions.value[5] = limitAndSort(tiposDeObra.value);
+
+      // Títulos
+      dropdownOptions.value[1] = groupAndCountByCustomRelation(
+        (obra) => obra.titulo || "Título Desconhecido",
+        obras.value
+      );
+
+      // Cursos
+      dropdownOptions.value[2] = groupAndCountByCustomRelation(
+        (obra) => {
+          const curso = cursos.value.find(
+            (c) => c.id_curso === obra.fk_id_curso
+          );
+          return curso ? curso.nome_curso : "Curso Desconhecido";
+        },
+        obras.value
+      );
+
+      // Anos
+      dropdownOptions.value[3] = groupAndCountByCustomRelation(
+        (obra) => new Date(obra.data_apresentacao).getFullYear(),
+        obras.value
+      );
+
+      // Orientadores
+      dropdownOptions.value[4] = groupAndCountByCustomRelation(
+        (obra) => {
+          const orientador = orientadores.value.find(
+            (o) => o.id_orientador === obra.fk_id_orientador
+          );
+          return orientador ? orientador.nome_orientador : "Orientador Desconhecido";
+        },
+        obras.value
+      );
+
+      // Tipos
+      dropdownOptions.value[5] = groupAndCountByCustomRelation(
+        (obra) => obra.tipo || "Tipo Desconhecido",
+        obras.value
+      );
     };
 
-    // Função para obter os itens visíveis da página atual
+    const goToResults = (index, selectedItem) => {
+      const filterKey = buttons[index];
+
+      if (!selectedItem || !filterKey) {
+        console.error("Filtro ou item inválido.");
+        return;
+      }
+
+      router.push({
+        name: "Resultados",
+        query: { filterKey, selectedItem },
+      }).catch((err) => {
+        console.error("Erro ao navegar para a rota:", err);
+      });
+    };
+
     const getVisibleItems = (index) => {
       const start = pages.value[index] * itemsPerPage;
       return dropdownOptions.value[index].slice(start, start + itemsPerPage);
     };
 
-    // Verifica se há uma página anterior
-    const hasPreviousPage = (index) => {
-      return pages.value[index] > 0;
-    };
+    const hasPreviousPage = (index) => pages.value[index] > 0;
 
-    // Verifica se há uma página seguinte
     const hasNextPage = (index) => {
       const totalItems = dropdownOptions.value[index].length;
       return pages.value[index] * itemsPerPage + itemsPerPage < totalItems;
     };
 
-    // Vai para a página anterior
     const goToPreviousPage = (index) => {
       if (pages.value[index] > 0) {
         pages.value[index]--;
       }
     };
 
-    // Vai para a próxima página
     const goToNextPage = (index) => {
       const totalItems = dropdownOptions.value[index].length;
       if (pages.value[index] * itemsPerPage + itemsPerPage < totalItems) {
@@ -195,20 +219,17 @@ export default {
       try {
         await autorStore.listarAutores();
         autores.value = autorStore.autores;
-        
+
         await orientadorStore.listarOrientadores();
         orientadores.value = orientadorStore.orientadores;
-        
+
         await obraStore.listarObras();
         obras.value = obraStore.obras;
-        tiposDeObra.value = obras.value.map((obra) => obra.tipo);
-        
+
         await cursoStore.listarCursos();
         cursos.value = cursoStore.cursos;
 
-        // Atualiza os dropdowns com os dados carregados
         updateDropdowns();
-
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -217,14 +238,13 @@ export default {
     return {
       autores,
       orientadores,
-      tiposDeObra,
       cursos,
       obras,
       dropdownOptions,
       buttons,
       dropdowns,
       toggleDropdown,
-      formatName,
+      goToResults,
       getVisibleItems,
       hasPreviousPage,
       hasNextPage,
@@ -274,24 +294,58 @@ export default {
   margin: 0;
 }
 
-.dropdown-list li {
+.dropdown-item {
   font-size: 14px;
   margin-bottom: 4px;
   color: #004d40;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s;
 }
 
-.dropdown-list li:last-child {
-  margin-bottom: 0;
+.dropdown-item:hover {
+  background-color: #00420c;
+  color: #fff;
+}
+
+.dropdown-item:active {
+  background-color: #002a06;
+  transform: scale(0.95);
 }
 
 .pagination-buttons {
   margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .pagination-button {
   margin-top: 10px;
-  background-color: #004d40;
-  color: #fff;
-  margin-left: 115px;
+}
+
+.prev-button {
+  background-color: #00420c;
+  color: white;
+}
+
+.prev-button:hover {
+  background-color: #001a05;
+}
+
+.next-button {
+  background-color: #00420c;
+  color: white;
+}
+
+.next-button:hover {
+  background-color: #001a05;
+}
+
+.item-count {
+  font-weight: bold;
+  color: #00796b;
 }
 </style>

@@ -17,7 +17,7 @@ const routes = [
     component: SearchPage
   },
   {
-    path: '/TccPage',
+    path: '/TccPage:id_obra',
     name: 'TccPage',
     component: TccPage
   },

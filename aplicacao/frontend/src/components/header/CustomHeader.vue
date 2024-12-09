@@ -1,6 +1,5 @@
 <template>
   <v-app-bar flat>
-    <!-- Logo e Título -->
     <v-container class="d-flex justify-space-between align-center">
       <div class="d-flex align-center">
         <router-link to="/" class="d-flex align-center">
@@ -12,15 +11,14 @@
       </div>
 
       <div class="d-flex align-center">
-        <!-- Barra de pesquisa -->
         <v-text-field
           solo
           flat
           hide-details
           label="PESQUISA RÁPIDA"
           class="search-input"
+          v-model="searchQuery"
         ></v-text-field>
-        <!-- Botão de busca com ícone de lupa -->
         <v-btn
           icon
           class="search-btn"
@@ -28,48 +26,12 @@
         >
           <v-icon>mdi-magnify</v-icon>
         </v-btn>
-        <!-- Divisor -->
         <v-divider vertical class="mx-4 divider-custom"></v-divider>
-        <!-- Título e botão de login -->
         <v-title depressed class="title-adm">Sou administrador:</v-title>
         <v-btn @click="toggleLoginForm" class="login-btn ml-3">ENTRAR</v-btn>
       </div>
     </v-container>
   </v-app-bar>
-
-  <!-- Formulário de Login -->
-  <v-dialog v-model="loginFormVisible" max-width="500px">
-    <v-card>
-      <v-card-title class="text-center">
-        <v-img class="logo-img mr-3" src="/img/logo.png" alt="logo"></v-img>
-        <span class="headline">ÁREA ADMINISTRATIVA</span>
-        <v-btn icon class="close-btn" @click="loginFormVisible = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-card-text>
-        <v-form @submit.prevent="submitLogin" v-model="valid">
-          <v-text-field
-            label="E-mail"
-            v-model="loginData.email"
-            type="email"
-            :rules="emailRules"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Senha"
-            v-model="loginData.password"
-            type="password"
-            :rules="passwordRules"
-            required
-          ></v-text-field>
-        </v-form>
-      </v-card-text>
-      <v-card-actions class="d-flex justify-center">
-        <v-btn color="#fff" @click="submitLogin" class="acess-btn" :disabled="!valid">Acessar</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 </template>
 
 <script>
@@ -78,13 +40,13 @@ import axios from "axios";
 export default {
   data() {
     return {
-      loginFormVisible: false, // Controla a visibilidade do formulário de login
-      valid: false, // Define a validação do formulário
+      loginFormVisible: false,
+      valid: false,
       loginData: {
         email: "",
         password: "",
       },
-      // Regras de validação para os campos de e-mail e senha
+      searchQuery: "",  // Modelo para o campo de pesquisa
       emailRules: [
         (v) => !!v || "E-mail é obrigatório",
         (v) => /.+@.+\..+/.test(v) || "E-mail inválido",
@@ -94,32 +56,23 @@ export default {
   },
   methods: {
     toggleLoginForm() {
-      // Alterna a visibilidade do formulário de login
       this.loginFormVisible = !this.loginFormVisible;
     },
     async submitLogin() {
-      // Validar os campos do formulário
       if (!this.valid) {
         alert("Por favor, preencha todos os campos corretamente");
         return;
       }
 
       try {
-        // Enviar dados para o backend
         const response = await axios.post(
           "http://seu-backend-endpoint/login",
           this.loginData
         );
 
-        // Verificar a resposta do servidor
         if (response.data.success) {
-          // Salvar o token ou dados do usuário, se necessário
           localStorage.setItem("userToken", response.data.token);
-
-          // Redirecionar para a página de sucesso
           this.$router.push({ name: "TestePage" });
-
-          // Fechar o formulário de login
           this.loginFormVisible = false;
         } else {
           alert("Credenciais inválidas!");
@@ -130,7 +83,13 @@ export default {
       }
     },
     handleSearch() {
-      alert("Busca acionada!"); // Substitua com a lógica de busca
+      if (this.searchQuery.trim() === "") {
+        // Se a pesquisa estiver vazia, redireciona para a tela de resultados com todas as obras
+        this.$router.push({ name: "Resultados", query: { searchQuery: "" } });
+      } else {
+        // Se houver uma pesquisa, redireciona com a query de pesquisa
+        this.$router.push({ name: "Resultados", query: { searchQuery: this.searchQuery } });
+      }
     },
   },
 };
