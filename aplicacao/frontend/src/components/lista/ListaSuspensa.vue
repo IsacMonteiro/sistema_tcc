@@ -6,7 +6,7 @@
           <v-icon class="me-2">
             {{ dropdowns[index] ? 'mdi-minus' : 'mdi-plus' }}
           </v-icon>
-          <span>{{ item }}</span>
+          <span>{{ item.toUpperCase() }}</span> <!-- Título em maiúsculo -->
         </v-btn>
 
         <v-expand-transition>
@@ -18,7 +18,7 @@
                 @click="goToResults(index, option.text)"
                 class="dropdown-item"
               >
-                {{ option.text }} 
+                {{ formatName(option.text, index) }} <!-- Formatação dos nomes -->
                 <span class="item-count">{{ option.count }}</span>
               </li>
             </ul>
@@ -44,7 +44,7 @@ import { useAutorStore } from "../../store/autorStore";
 import { useOrientadorStore } from "../../store/orientadorStore";
 import { useObraStore } from "../../store/obraStore";
 import { useCursoStore } from "../../store/cursoStore";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 
 export default {
@@ -144,6 +144,16 @@ export default {
       if (pages.value[index] * itemsPerPage + itemsPerPage < dropdownOptions.value[index].length) pages.value[index]++;
     };
 
+    const formatName = (name, index) => {
+      if (index === 0 || index === 4) {
+        const parts = name.split(" ");
+        const firstName = parts.slice(0, -1).join(" ");
+        const lastName = parts[parts.length - 1];
+        return `${lastName}, ${firstName}`.toUpperCase(); // Formata para 'Sobrenome, Nome' e em maiúsculo
+      }
+      return name.toUpperCase(); // Para outros campos, apenas coloca em maiúsculo
+    };
+
     onMounted(async () => {
       try {
         await autorStore.listarAutores();
@@ -158,7 +168,10 @@ export default {
         await cursoStore.listarCursos();
         cursos.value = cursoStore.cursos;
 
-        updateDropdowns();
+        // Use nextTick para garantir que as atualizações ocorram após a renderização
+        nextTick(() => {
+          updateDropdowns();
+        });
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -179,6 +192,7 @@ export default {
       hasNextPage,
       goToPreviousPage,
       goToNextPage,
+      formatName, // Expondo a função de formatação
     };
   },
 };
