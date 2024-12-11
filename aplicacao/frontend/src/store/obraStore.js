@@ -4,6 +4,9 @@ import axios from 'axios';
 export const useObraStore = defineStore('obra', {
   state: () => ({
     obras: [],
+    currentPage: 1, // Página atual para a paginação
+    filterKey: null, // Filtro aplicado (e.g., Autor, Título)
+    selectedItem: null, // Valor do filtro aplicado
   }),
   actions: {
     async listarObras() {
@@ -33,7 +36,7 @@ export const useObraStore = defineStore('obra', {
         console.error('Erro ao excluir obra:', error);
       }
     },
-    async editarObra(id_obra , titulo, resumo, palavras_chave, data_publicacao, tipo, status, id_orientador, id_coorientador, id_curso) {
+    async editarObra(id_obra, titulo, resumo, palavras_chave, data_publicacao, tipo, status, id_orientador, id_coorientador, id_curso) {
       try {
         const obraAtualizada = { titulo, resumo, palavras_chave, data_publicacao, tipo, status, id_orientador, id_coorientador, id_curso };
         const response = await axios.put(`http://localhost:3000/api/obra/${id_obra}`, obraAtualizada);
@@ -43,6 +46,15 @@ export const useObraStore = defineStore('obra', {
         console.error('Erro ao editar obra:', error.response?.data || error.message);
         throw error;
       }
+    },
+    setFilters(filterKey, selectedItem) {
+      // Salva os filtros aplicados
+      this.filterKey = filterKey;
+      this.selectedItem = selectedItem;
+    },
+    setCurrentPage(page) {
+      // Salva a página atual
+      this.currentPage = page;
     },
   },
 });

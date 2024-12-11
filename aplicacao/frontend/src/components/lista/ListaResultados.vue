@@ -67,42 +67,36 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, toRaw } from "vue";
-import { useAutorStore } from "../../store/autorStore";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useObraStore } from "../../store/obraStore";
+import { useAutorStore } from "../../store/autorStore";
 import { useCursoStore } from "../../store/cursoStore";
 import { useOrientadorStore } from "../../store/orientadorStore";
-import { useRouter, useRoute } from "vue-router";
 
 export default {
   setup() {
     const router = useRouter();
     const route = useRoute();
 
-    const autorStore = useAutorStore();
     const obraStore = useObraStore();
+    const autorStore = useAutorStore();
     const orientadorStore = useOrientadorStore();
     const cursoStore = useCursoStore();
 
     const results = ref([]);
-    const currentPage = ref(1);
     const itemsPerPage = 10;
 
-    // Dados do filtro vindo da rota
-    const filterKey = ref(route.query.filterKey || null);
-    const selectedItem = ref(route.query.selectedItem || null);
+    // Estados controlados pela store
+    const currentPage = ref(obraStore.currentPage || 1);
+    const filterKey = ref(obraStore.filterKey || route.query.filterKey || null);
+    const selectedItem = ref(obraStore.selectedItem || route.query.selectedItem || null);
 
     const filteredResults = computed(() => {
       const allResults = results.value.map((obra) => {
-        const autor = toRaw(autorStore.autores).find(
-          (autor) => autor.id_autor === obra.fk_id_autor
-        );
-        const orientador = toRaw(orientadorStore.orientadores).find(
-          (orientador) => orientador.id_orientador === obra.fk_id_orientador
-        );
-        const curso = toRaw(cursoStore.cursos).find(
-          (curso) => curso.id_curso === obra.fk_id_curso
-        );
+        const autor = autorStore.autores.find((autor) => autor.id_autor === obra.fk_id_autor);
+        const orientador = orientadorStore.orientadores.find((orientador) => orientador.id_orientador === obra.fk_id_orientador);
+        const curso = cursoStore.cursos.find((curso) => curso.id_curso === obra.fk_id_curso);
 
         return {
           ...obra,
@@ -113,31 +107,28 @@ export default {
         };
       });
 
-      // Se não houver filtro, retornar todos os resultados
-      if (!filterKey.value || !selectedItem.value || selectedItem.value.trim() === '') {
+      if (!filterKey.value || !selectedItem.value || selectedItem.value.trim() === "") {
         return allResults;
       }
 
-      const filtered = allResults.filter((obra) => {
+      return allResults.filter((obra) => {
         switch (filterKey.value) {
           case "Autor":
-            return obra.author && obra.author.toLowerCase().includes(selectedItem.value.toLowerCase());
+            return obra.author?.toLowerCase().includes(selectedItem.value.toLowerCase());
           case "Orientador":
-            return obra.orientador && obra.orientador.toLowerCase().includes(selectedItem.value.toLowerCase());
+            return obra.orientador?.toLowerCase().includes(selectedItem.value.toLowerCase());
           case "Áreas de Conhecimento - Cursos":
-            return obra.curso && obra.curso.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+            return obra.curso?.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
           case "Título":
-            return obra.titulo && obra.titulo.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+            return obra.titulo?.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
           case "Data de Defesa":
-            return obra.data_apresentacao && obra.data_apresentacao.includes(selectedItem.value);
+            return obra.data_apresentacao?.includes(selectedItem.value);
           case "Tipo de Obra":
-            return obra.tipo && obra.tipo.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+            return obra.tipo?.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
           default:
             return true;
         }
       });
-
-      return filtered;
     });
 
     const paginatedResults = computed(() => {
@@ -146,27 +137,30 @@ export default {
       return filteredResults.value.slice(start, end);
     });
 
-    const totalPages = computed(() => {
-      return Math.ceil(filteredResults.value.length / itemsPerPage);
-    });
+    const totalPages = computed(() => Math.ceil(filteredResults.value.length / itemsPerPage));
 
     const nextPage = () => {
       if (currentPage.value < totalPages.value) {
         currentPage.value++;
+        obraStore.setCurrentPage(currentPage.value);
       }
     };
 
     const previousPage = () => {
       if (currentPage.value > 1) {
         currentPage.value--;
+        obraStore.setCurrentPage(currentPage.value);
       }
     };
 
-    // Função de carregamento dos dados
     const loadData = async () => {
       try {
-        // Carregar obras, autores e orientadores
-        await Promise.all([obraStore.listarObras(), autorStore.listarAutores(), orientadorStore.listarOrientadores(), cursoStore.listarCursos()]);
+        await Promise.all([
+          obraStore.listarObras(),
+          autorStore.listarAutores(),
+          orientadorStore.listarOrientadores(),
+          cursoStore.listarCursos(),
+        ]);
         results.value = obraStore.obras;
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -185,8 +179,10 @@ export default {
       router.push("/");
     };
 
-    // Carregamento dos dados quando o componente é montado
-    onMounted(loadData);
+    onMounted(() => {
+      loadData();
+      obraStore.setFilters(filterKey.value, selectedItem.value);
+    });
 
     return {
       results,
