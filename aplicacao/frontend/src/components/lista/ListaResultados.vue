@@ -168,11 +168,6 @@ export default {
         // Carregar obras, autores e orientadores
         await Promise.all([obraStore.listarObras(), autorStore.listarAutores(), orientadorStore.listarOrientadores(), cursoStore.listarCursos()]);
         results.value = obraStore.obras;
-        console.log("Obras carregadas:", results.value);
-        console.log("Filtro inicial:", { filterKey: filterKey.value, selectedItem: selectedItem.value });
-        console.log("Autores carregados:", autorStore.autores);  // Verificando autores carregados
-        console.log("Orientadores carregados:", orientadorStore.orientadores);  // Verificando orientadores carregados
-        console.log("Cursos carregados:", cursoStore.cursos);  // Verificando cursos carregados
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }

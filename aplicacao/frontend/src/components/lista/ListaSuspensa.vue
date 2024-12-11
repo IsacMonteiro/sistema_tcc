@@ -116,7 +116,6 @@ export default {
       const filterKey = buttons[index];
 
       if (!selectedItem || !filterKey) {
-        console.error("Filtro ou item inválido.");
         return;
       }
 
