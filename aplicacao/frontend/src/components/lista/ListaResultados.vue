@@ -14,7 +14,6 @@
           class="mb-3 result-card"
         >
           <v-card-text>
-            <!-- Título com link para página de detalhes -->
             <h5 class="result-title">
               <router-link
                 :to="{ name: 'TccPage', params: { id_obra: result.id_obra } }"
@@ -34,7 +33,6 @@
       </v-col>
     </v-row>
 
-    <!-- Botões de navegação -->
     <v-row justify="center">
       <v-col cols="auto">
         <v-btn
@@ -54,7 +52,6 @@
       </v-col>
     </v-row>
 
-    <!-- Botão para voltar à tela principal -->
     <v-row justify="center">
       <v-col cols="auto">
         <v-btn
@@ -70,33 +67,77 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, toRaw } from "vue";
 import { useAutorStore } from "../../store/autorStore";
 import { useObraStore } from "../../store/obraStore";
-import { useRouter } from "vue-router";
+import { useCursoStore } from "../../store/cursoStore";
+import { useOrientadorStore } from "../../store/orientadorStore";
+import { useRouter, useRoute } from "vue-router";
 
 export default {
   setup() {
     const router = useRouter();
+    const route = useRoute();
 
     const autorStore = useAutorStore();
     const obraStore = useObraStore();
+    const orientadorStore = useOrientadorStore();
+    const cursoStore = useCursoStore();
 
     const results = ref([]);
     const currentPage = ref(1);
     const itemsPerPage = 10;
 
+    // Dados do filtro vindo da rota
+    const filterKey = ref(route.query.filterKey || null);
+    const selectedItem = ref(route.query.selectedItem || null);
+
     const filteredResults = computed(() => {
-      return results.value.map((obra) => {
-        const autor = autorStore.autores.find(
-          (autor) =>
-            autor.id_autor === obra.fk_id_autor
+      const allResults = results.value.map((obra) => {
+        const autor = toRaw(autorStore.autores).find(
+          (autor) => autor.id_autor === obra.fk_id_autor
         );
+        const orientador = toRaw(orientadorStore.orientadores).find(
+          (orientador) => orientador.id_orientador === obra.fk_id_orientador
+        );
+        const curso = toRaw(cursoStore.cursos).find(
+          (curso) => curso.id_curso === obra.fk_id_curso
+        );
+
         return {
           ...obra,
           author: autor ? autor.nome_autor : "Autor desconhecido",
+          orientador: orientador ? orientador.nome_orientador : "Orientador desconhecido",
+          curso: curso ? curso.nome_curso : "Curso desconhecido",
+          tipo: obra.tipo || "Tipo de obra desconhecido",
         };
       });
+
+      // Se não houver filtro, retornar todos os resultados
+      if (!filterKey.value || !selectedItem.value || selectedItem.value.trim() === '') {
+        return allResults;
+      }
+
+      const filtered = allResults.filter((obra) => {
+        switch (filterKey.value) {
+          case "Autor":
+            return obra.author && obra.author.toLowerCase().includes(selectedItem.value.toLowerCase());
+          case "Orientador":
+            return obra.orientador && obra.orientador.toLowerCase().includes(selectedItem.value.toLowerCase());
+          case "Áreas de Conhecimento - Cursos":
+            return obra.curso && obra.curso.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+          case "Título":
+            return obra.titulo && obra.titulo.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+          case "Data de Defesa":
+            return obra.data_apresentacao && obra.data_apresentacao.includes(selectedItem.value);
+          case "Tipo de Obra":
+            return obra.tipo && obra.tipo.toLowerCase().includes(selectedItem.value.toLowerCase().trim());
+          default:
+            return true;
+        }
+      });
+
+      return filtered;
     });
 
     const paginatedResults = computed(() => {
@@ -121,9 +162,20 @@ export default {
       }
     };
 
+    // Função de carregamento dos dados
     const loadData = async () => {
-      await Promise.all([obraStore.listarObras(), autorStore.listarAutores()]);
-      results.value = obraStore.obras;
+      try {
+        // Carregar obras, autores e orientadores
+        await Promise.all([obraStore.listarObras(), autorStore.listarAutores(), orientadorStore.listarOrientadores(), cursoStore.listarCursos()]);
+        results.value = obraStore.obras;
+        console.log("Obras carregadas:", results.value);
+        console.log("Filtro inicial:", { filterKey: filterKey.value, selectedItem: selectedItem.value });
+        console.log("Autores carregados:", autorStore.autores);  // Verificando autores carregados
+        console.log("Orientadores carregados:", orientadorStore.orientadores);  // Verificando orientadores carregados
+        console.log("Cursos carregados:", cursoStore.cursos);  // Verificando cursos carregados
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
     };
 
     const formatDate = (dateString) => {
@@ -138,6 +190,7 @@ export default {
       router.push("/");
     };
 
+    // Carregamento dos dados quando o componente é montado
     onMounted(loadData);
 
     return {
@@ -150,6 +203,8 @@ export default {
       previousPage,
       formatDate,
       goBack,
+      filterKey,
+      selectedItem,
     };
   },
 };

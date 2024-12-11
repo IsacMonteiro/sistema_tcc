@@ -1,29 +1,14 @@
 <template>
   <v-container class="d-flex flex-column align-center gap-4">
-    <!-- Botões com Lista Suspensa -->
     <v-row class="button-container" justify="center" align="center">
-      <v-col
-        v-for="(item, index) in buttons"
-        :key="index"
-        cols="12"
-        md="4"
-        class="mb-4"
-      >
-        <!-- Botão Principal -->
-        <v-btn
-          class="filter-button"
-          elevation="2"
-          dark
-          @click="toggleDropdown(index)"
-        >
-          <!-- Ícone à Esquerda -->
+      <v-col v-for="(item, index) in buttons" :key="index" cols="12" md="4" class="mb-4">
+        <v-btn class="filter-button" elevation="2" dark @click="toggleDropdown(index)">
           <v-icon class="me-2">
             {{ dropdowns[index] ? 'mdi-minus' : 'mdi-plus' }}
           </v-icon>
           <span>{{ item }}</span>
         </v-btn>
 
-        <!-- Lista Suspensa -->
         <v-expand-transition>
           <div v-if="dropdowns[index]" class="dropdown-list">
             <ul>
@@ -38,21 +23,12 @@
               </li>
             </ul>
 
-            <!-- Botões para navegar entre as páginas -->
             <div class="pagination-buttons">
-              <v-btn
-                v-if="hasPreviousPage(index)"
-                @click="goToPreviousPage(index)"
-                class="pagination-button prev-button"
-              >
+              <v-btn v-if="hasPreviousPage(index)" @click="goToPreviousPage(index)" class="pagination-button prev-button">
                 Voltar
               </v-btn>
 
-              <v-btn
-                v-if="hasNextPage(index)"
-                @click="goToNextPage(index)"
-                class="pagination-button next-button"
-              >
+              <v-btn v-if="hasNextPage(index)" @click="goToNextPage(index)" class="pagination-button next-button">
                 Próximo
               </v-btn>
             </div>
@@ -84,22 +60,10 @@ export default {
     const cursos = ref([]);
     const obras = ref([]);
 
-    const dropdownOptions = ref([
-      [], // Autor
-      [], // Título
-      [], // Curso
-      [], // Ano
-      [], // Orientador
-      [], // Tipo de Obra
-    ]);
+    const dropdownOptions = ref([[], [], [], [], [], []]); // Filtros para os dropdowns
 
     const buttons = [
-      "Autor",
-      "Título",
-      "Áreas de Conhecimento - Cursos",
-      "Data de Defesa",
-      "Orientador",
-      "Tipo de Obra",
+      "Autor", "Título", "Áreas de Conhecimento - Cursos", "Data de Defesa", "Orientador", "Tipo de Obra"
     ];
 
     const dropdowns = ref([false, false, false, false, false, false]);
@@ -122,52 +86,26 @@ export default {
     };
 
     const updateDropdowns = () => {
-      // Autores
       dropdownOptions.value[0] = groupAndCountByCustomRelation(
-        (obra) => {
-          const autor = autores.value.find(
-            (a) => a.id_autor === obra.fk_id_autor
-          );
-          return autor ? autor.nome_autor : "Autor Desconhecido";
-        },
+        (obra) => autores.value.find((a) => a.id_autor === obra.fk_id_autor)?.nome_autor || "Autor Desconhecido",
         obras.value
       );
-
-      // Títulos
       dropdownOptions.value[1] = groupAndCountByCustomRelation(
         (obra) => obra.titulo || "Título Desconhecido",
         obras.value
       );
-
-      // Cursos
       dropdownOptions.value[2] = groupAndCountByCustomRelation(
-        (obra) => {
-          const curso = cursos.value.find(
-            (c) => c.id_curso === obra.fk_id_curso
-          );
-          return curso ? curso.nome_curso : "Curso Desconhecido";
-        },
+        (obra) => cursos.value.find((c) => c.id_curso === obra.fk_id_curso)?.nome_curso || "Curso Desconhecido",
         obras.value
       );
-
-      // Anos
       dropdownOptions.value[3] = groupAndCountByCustomRelation(
         (obra) => new Date(obra.data_apresentacao).getFullYear(),
         obras.value
       );
-
-      // Orientadores
       dropdownOptions.value[4] = groupAndCountByCustomRelation(
-        (obra) => {
-          const orientador = orientadores.value.find(
-            (o) => o.id_orientador === obra.fk_id_orientador
-          );
-          return orientador ? orientador.nome_orientador : "Orientador Desconhecido";
-        },
+        (obra) => orientadores.value.find((o) => o.id_orientador === obra.fk_id_orientador)?.nome_orientador || "Orientador Desconhecido",
         obras.value
       );
-
-      // Tipos
       dropdownOptions.value[5] = groupAndCountByCustomRelation(
         (obra) => obra.tipo || "Tipo Desconhecido",
         obras.value
@@ -182,9 +120,10 @@ export default {
         return;
       }
 
+      // Navegar para a página de resultados com os parâmetros de filtro
       router.push({
-        name: "Resultados",
-        query: { filterKey, selectedItem },
+        name: "SearchPage",  // Nome da rota da página de resultados
+        query: { filterKey, selectedItem }
       }).catch((err) => {
         console.error("Erro ao navegar para a rota:", err);
       });
@@ -196,23 +135,14 @@ export default {
     };
 
     const hasPreviousPage = (index) => pages.value[index] > 0;
-
-    const hasNextPage = (index) => {
-      const totalItems = dropdownOptions.value[index].length;
-      return pages.value[index] * itemsPerPage + itemsPerPage < totalItems;
-    };
+    const hasNextPage = (index) => pages.value[index] * itemsPerPage + itemsPerPage < dropdownOptions.value[index].length;
 
     const goToPreviousPage = (index) => {
-      if (pages.value[index] > 0) {
-        pages.value[index]--;
-      }
+      if (pages.value[index] > 0) pages.value[index]--;
     };
 
     const goToNextPage = (index) => {
-      const totalItems = dropdownOptions.value[index].length;
-      if (pages.value[index] * itemsPerPage + itemsPerPage < totalItems) {
-        pages.value[index]++;
-      }
+      if (pages.value[index] * itemsPerPage + itemsPerPage < dropdownOptions.value[index].length) pages.value[index]++;
     };
 
     onMounted(async () => {
