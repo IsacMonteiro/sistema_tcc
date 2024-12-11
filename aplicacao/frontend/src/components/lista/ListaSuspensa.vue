@@ -168,7 +168,7 @@ export default {
         await cursoStore.listarCursos();
         cursos.value = cursoStore.cursos;
 
-        // Use nextTick para garantir que as atualizações ocorram após a renderização
+        // nextTick para garantir que as atualizações ocorram após a renderização
         nextTick(() => {
           updateDropdowns();
         });

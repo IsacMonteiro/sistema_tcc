@@ -59,6 +59,20 @@
                 </v-card>
               </v-col>
 
+              <!-- Exibição dos Coorientadores -->
+              <v-col cols="12" class="mt-3" v-if="tcc.coadvisors && tcc.coadvisors.length > 0">
+                <v-card class="tcc-card">
+                  <v-card-text>
+                    <p class="tcc-section">
+                      <strong>Coorientador(es):</strong> <br />
+                      <span v-for="(coadvisor, index) in tcc.coadvisors" :key="index">
+                        {{ coadvisor }}<span v-if="index < tcc.coadvisors.length - 1">, </span>
+                      </span>
+                    </p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
               <v-col cols="12" class="mt-3">
                 <v-card class="tcc-card">
                   <v-card-text>
@@ -88,6 +102,7 @@ import { useObraStore } from '../../store/obraStore';
 import { useAutorStore } from '../../store/autorStore';
 import { useOrientadorStore } from '../../store/orientadorStore';
 import { useCursoStore } from '../../store/cursoStore';
+import { useObraCoorientadorStore } from '../../store/obraCoorientadorStore';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -98,6 +113,7 @@ export default {
     const autorStore = useAutorStore();
     const orientadorStore = useOrientadorStore();
     const cursoStore = useCursoStore();
+    const obraCoorientadorStore = useObraCoorientadorStore(); // Store obraCoorientador
     const route = useRoute();
     const router = useRouter();
 
@@ -110,63 +126,80 @@ export default {
       date: '',
       author: '',
       advisor: '',
+      coadvisors: [], // Lista de coorientadores
       keywords: [],
     });
 
     // Função para carregar a obra e os autores
     const loadData = async () => {
-  try {
-    await obraStore.listarObras(); // Carrega as obras
-    await autorStore.listarAutores(); // Carrega os autores
-    await orientadorStore.listarOrientadores(); // Carrega os orientadores
-    await cursoStore.listarCursos(); // Carrega os cursos
+      try {
+        await obraStore.listarObras(); // Carrega as obras
+        await autorStore.listarAutores(); // Carrega os autores
+        await orientadorStore.listarOrientadores(); // Carrega os orientadores
+        await cursoStore.listarCursos(); // Carrega os cursos
+        await obraCoorientadorStore.listarObraCoorientadores(); // Carrega as associações de obra e coorientador
 
-    const obraId = parseInt(route.params.id_obra);
-    console.log('ID da Obra:', obraId);
+        const obraId = parseInt(route.params.id_obra);
+        console.log('ID da Obra:', obraId);
 
-    const obra = obraStore.obras.find((item) => item.id_obra === obraId);
-    console.log('Obra encontrada:', obra); // Exibe a obra
+        const obra = obraStore.obras.find((item) => item.id_obra === obraId);
+        console.log('Obra encontrada:', obra); // Exibe a obra
 
-    if (obra) {
-      // Formatação da data de defesa
-      const formattedDate = obra.data_apresentacao
-        ? new Date(obra.data_apresentacao).toLocaleDateString('pt-BR')
-        : '';
+        if (obra) {
+          // Formatação da data de defesa
+          const formattedDate = obra.data_apresentacao
+            ? new Date(obra.data_apresentacao).toLocaleDateString('pt-BR')
+            : '';
 
-      // Buscar autor pela chave fk_id_autor
-      const autor = autorStore.autores.find((a) => a.id_autor === obra.fk_id_autor);
-      const autorNome = autor ? autor.nome_autor : 'Autor não encontrado';
+          // Buscar autor pela chave fk_id_autor
+          const autor = autorStore.autores.find((a) => a.id_autor === obra.fk_id_autor);
+          const autorNome = autor ? autor.nome_autor : 'Autor não encontrado';
 
-      // Buscar orientador pela chave fk_id_orientador
-      const orientador = orientadorStore.orientadores.find((a) => a.id_orientador === obra.fk_id_orientador);
-      const orientadorNome = orientador ? orientador.nome_orientador : 'Orientador não encontrado';
+          // Buscar orientador pela chave fk_id_orientador
+          const orientador = orientadorStore.orientadores.find((a) => a.id_orientador === obra.fk_id_orientador);
+          // Supondo que a titulação do orientador seja armazenada em 'orientador.titulacao'
+          const orientadorNome = orientador
+            ? `${orientador.titulacao ? orientador.titulacao + ' ' : ''}${orientador.nome_orientador}`
+            : 'Orientador não encontrado';
 
-      // Buscar curso pela chave fk_id_curso
-      const curso = cursoStore.cursos.find((a) => a.id_curso === obra.fk_id_curso);
-      const cursoNome = curso ? curso.nome_curso : 'Orientador não encontrado';
+          // Buscar curso pela chave fk_id_curso
+          const curso = cursoStore.cursos.find((a) => a.id_curso === obra.fk_id_curso);
+          const cursoNome = curso ? curso.nome_curso : 'Curso não encontrado';
 
-      // Verificar se a lista de autores foi carregada corretamente
-      console.log('Autores carregados:', autorStore.autores); // Exibe os autores carregados
+          // Buscar os coorientadores relacionados a essa obra
+          const coorientadoresRelacionados = obraCoorientadorStore.obraCoorientadores.filter(
+            (rel) => rel.fk_id_obra === obraId
+          );
 
-      tcc.value = {
-        title: obra.titulo,
-        summary: obra.resumo,
-        type: obra.tipo,
-        classification: cursoNome,
-        year: obra.ano,
-        date: formattedDate,
-        author: autorNome,
-        advisor: orientadorNome,
-        keywords: obra.palavras_chave ? obra.palavras_chave.split(';') : [],
-      };
-    } else {
-      console.error('Obra não encontrada');
-    }
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-  }
-};
+          // Buscar os coorientadores pelo ID
+          const coadvisors = coorientadoresRelacionados.map((rel) => {
+            const coorientador = orientadorStore.orientadores.find(
+              (o) => o.id_orientador === rel.fk_id_coorientador
+            );
+            return coorientador
+              ? `${coorientador.titulacao ? coorientador.titulacao + ' ' : ''}${coorientador.nome_orientador}`
+              : 'Coorientador não encontrado';
+          });
 
+          tcc.value = {
+            title: obra.titulo,
+            summary: obra.resumo,
+            type: obra.tipo,
+            classification: cursoNome,
+            year: obra.ano,
+            date: formattedDate,
+            author: autorNome,
+            advisor: orientadorNome,
+            coadvisors: coadvisors, // Lista de coorientadores
+            keywords: obra.palavras_chave ? obra.palavras_chave.split(';') : [],
+          };
+        } else {
+          console.error('Obra não encontrada');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    };
 
     // Chama a função loadData quando o componente for montado
     onMounted(loadData);
@@ -183,7 +216,7 @@ export default {
   },
 };
 </script>
-  
+
 <style scoped>
   /* Título */
   .section-title h3 {

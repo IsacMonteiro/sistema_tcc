@@ -5,7 +5,7 @@ const obraRoutes = require('./routes/obraRoute');
 const cursoRoutes = require('./routes/cursoRoute');
 const logAcoesRoutes = require('./routes/logAcoesRoute');
 const administradorRoutes = require('./routes/administradorRoute');
-const obraCoorientadorRoutes = require('./routes/coorientadorRoute');
+const obraCoorientadorRoutes = require('./routes/obraCoorientadorRoute');
 const autorRoutes = require('./routes/autorRoute');
 const orientadorRoutes = require('./routes/orientadorRoute');
 const coorientadorRoutes = require('./routes/coorientadorRoute');
@@ -24,7 +24,7 @@ app.use('/api/coorientador', coorientadorRoutes); // Rota para coorientadores
 app.use('/api/curso', cursoRoutes); // Rota para cursos
 app.use('/api/log-acoes', logAcoesRoutes); // Rota para log de ações
 app.use('/api/administrador', administradorRoutes); // Rota para administradores
-app.use('/api/obra-coorientador', obraCoorientadorRoutes); // Rota para associações de obras e coorientadores
+app.use('/api/obraCoorientador', obraCoorientadorRoutes); // Rota para associações de obras e coorientadores
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {

@@ -14,7 +14,13 @@ async function associarObraCoorientador(fk_id_obra, fk_id_coorientador) {
   try {
     // Executa o SQL e espera o resultado
     const [result] = await pool.execute(sql, [fk_id_obra, fk_id_coorientador]);
-    return result; // Retorna o resultado da operação
+
+    // Verifica se a inserção foi bem-sucedida
+    if (result.affectedRows > 0) {
+      return { message: 'Associação criada com sucesso!', data: result };
+    } else {
+      throw new Error('Falha ao criar associação de obra e coorientador.');
+    }
   } catch (err) {
     throw new Error('Erro ao associar obra ao coorientador: ' + err.message);
   }
@@ -33,7 +39,13 @@ async function desassociarObraCoorientador(fk_id_obra, fk_id_coorientador) {
   try {
     // Executa o SQL e espera o resultado
     const [result] = await pool.execute(sql, [fk_id_obra, fk_id_coorientador]);
-    return result; // Retorna o resultado da exclusão
+
+    // Verifica se a exclusão foi bem-sucedida
+    if (result.affectedRows > 0) {
+      return { message: 'Associação removida com sucesso!', data: result };
+    } else {
+      throw new Error('Nenhuma associação encontrada para remover.');
+    }
   } catch (err) {
     throw new Error('Erro ao desassociar obra do coorientador: ' + err.message);
   }
@@ -41,13 +53,16 @@ async function desassociarObraCoorientador(fk_id_obra, fk_id_coorientador) {
 
 // Função para listar todas as associações de obras e coorientadores
 async function listarObraCoorientadores() {
-  // SQL para selecionar todas as associações da tabela ObraCoorientador
   const sql = 'SELECT * FROM ObraCoorientador';
 
   try {
-    // Executa o SQL e espera os resultados
     const [results] = await pool.execute(sql);
-    return results; // Retorna os resultados da consulta
+
+    if (results.length > 0) {
+      return results;  // Retorne o array diretamente
+    } else {
+      return { message: 'Nenhuma associação encontrada.' };
+    }
   } catch (err) {
     throw new Error('Erro ao listar associações de obras e coorientadores: ' + err.message);
   }
