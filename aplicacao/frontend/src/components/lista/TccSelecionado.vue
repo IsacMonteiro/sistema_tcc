@@ -101,6 +101,7 @@
 import { useObraStore } from '../../store/obraStore';
 import { useAutorStore } from '../../store/autorStore';
 import { useOrientadorStore } from '../../store/orientadorStore';
+import { useCoorientadorStore } from '../../store/coorientadorStore';
 import { useCursoStore } from '../../store/cursoStore';
 import { useObraCoorientadorStore } from '../../store/obraCoorientadorStore';
 import { onMounted, ref } from 'vue';
@@ -108,16 +109,15 @@ import { useRoute, useRouter } from 'vue-router';
 
 export default {
   setup() {
-    // Importando as stores corretamente
     const obraStore = useObraStore();
     const autorStore = useAutorStore();
     const orientadorStore = useOrientadorStore();
+    const coorientadorStore = useCoorientadorStore();
     const cursoStore = useCursoStore();
-    const obraCoorientadorStore = useObraCoorientadorStore(); // Store obraCoorientador
+    const obraCoorientadorStore = useObraCoorientadorStore();
     const route = useRoute();
     const router = useRouter();
 
-    // Variável reativa para o TCC
     const tcc = ref({
       title: '',
       summary: '',
@@ -126,58 +126,49 @@ export default {
       date: '',
       author: '',
       advisor: '',
-      coadvisors: [], // Lista de coorientadores
+      coadvisors: [],
       keywords: [],
     });
 
-    // Função para carregar a obra e os autores
     const loadData = async () => {
       try {
-        await obraStore.listarObras(); // Carrega as obras
-        await autorStore.listarAutores(); // Carrega os autores
-        await orientadorStore.listarOrientadores(); // Carrega os orientadores
-        await cursoStore.listarCursos(); // Carrega os cursos
-        await obraCoorientadorStore.listarObraCoorientadores(); // Carrega as associações de obra e coorientador
+        await obraStore.listarObras();
+        await autorStore.listarAutores();
+        await orientadorStore.listarOrientadores();
+        await coorientadorStore.listarCoorientadores();
+        await cursoStore.listarCursos();
+        await obraCoorientadorStore.listarObraCoorientadores();
 
         const obraId = parseInt(route.params.id_obra);
-        console.log('ID da Obra:', obraId);
 
         const obra = obraStore.obras.find((item) => item.id_obra === obraId);
-        console.log('Obra encontrada:', obra); // Exibe a obra
 
         if (obra) {
-          // Formatação da data de defesa
           const formattedDate = obra.data_apresentacao
             ? new Date(obra.data_apresentacao).toLocaleDateString('pt-BR')
             : '';
 
-          // Buscar autor pela chave fk_id_autor
           const autor = autorStore.autores.find((a) => a.id_autor === obra.fk_id_autor);
           const autorNome = autor ? autor.nome_autor : 'Autor não encontrado';
 
-          // Buscar orientador pela chave fk_id_orientador
           const orientador = orientadorStore.orientadores.find((a) => a.id_orientador === obra.fk_id_orientador);
-          // Supondo que a titulação do orientador seja armazenada em 'orientador.titulacao'
           const orientadorNome = orientador
             ? `${orientador.titulacao ? orientador.titulacao + ' ' : ''}${orientador.nome_orientador}`
             : 'Orientador não encontrado';
 
-          // Buscar curso pela chave fk_id_curso
           const curso = cursoStore.cursos.find((a) => a.id_curso === obra.fk_id_curso);
           const cursoNome = curso ? curso.nome_curso : 'Curso não encontrado';
 
-          // Buscar os coorientadores relacionados a essa obra
           const coorientadoresRelacionados = obraCoorientadorStore.obraCoorientadores.filter(
             (rel) => rel.fk_id_obra === obraId
           );
 
-          // Buscar os coorientadores pelo ID
           const coadvisors = coorientadoresRelacionados.map((rel) => {
-            const coorientador = orientadorStore.orientadores.find(
-              (o) => o.id_orientador === rel.fk_id_coorientador
+            const coorientador = coorientadorStore.coorientadores.find(
+              (o) => o.id_coorientador === rel.fk_id_coorientador
             );
             return coorientador
-              ? `${coorientador.titulacao ? coorientador.titulacao + ' ' : ''}${coorientador.nome_orientador}`
+              ? `${coorientador.titulacao ? coorientador.titulacao + ' ' : ''}${coorientador.nome_coorientador}`
               : 'Coorientador não encontrado';
           });
 
@@ -190,7 +181,7 @@ export default {
             date: formattedDate,
             author: autorNome,
             advisor: orientadorNome,
-            coadvisors: coadvisors, // Lista de coorientadores
+            coadvisors: coadvisors,
             keywords: obra.palavras_chave ? obra.palavras_chave.split(';') : [],
           };
         } else {
@@ -201,10 +192,8 @@ export default {
       }
     };
 
-    // Chama a função loadData quando o componente for montado
     onMounted(loadData);
 
-    // Função para voltar à tela de busca
     const goBack = () => {
       router.push('/SearchPage');
     };
@@ -228,7 +217,7 @@ export default {
     text-transform: uppercase;
     font-weight: bold;
   }
-  
+
   /* Resumo */
   .tcc-summary {
     font-size: 16px;
@@ -236,32 +225,32 @@ export default {
     line-height: 1.6;
     text-align: justify;
   }
-  
+
   /* Cartão Maior */
   .tcc-card-main {
     background-color: #f4f4f4;
     border-radius: 10px;
     padding: 20px;
   }
-  
+
   /* Cartões Individuais */
   .tcc-card {
     background-color: #ffffff;
     border-radius: 8px;
     padding: 15px;
   }
-  
+
   /* Texto nos cartões */
   .tcc-section {
     margin-bottom: 10px;
     font-size: 16px;
   }
-  
+
   .tcc-section strong {
     color: #004b81;
     font-weight: bold;
   }
-  
+
   /* Botões */
   .download-btn {
     background-color: #00420c;
@@ -269,18 +258,18 @@ export default {
     color: white;
     font-weight: bold;
   }
-  
+
   .download-btn:hover {
     background-color: #001a05;
   }
-  
+
   .back-btn {
     background-color: #00420c;
     border-radius: 7px;
     color: white;
     font-weight: bold;
   }
-  
+
   .back-btn:hover {
     background-color: #001a05;
   }
